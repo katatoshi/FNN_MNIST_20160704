@@ -20,8 +20,8 @@ namespace FNN_MNIST_20160704
     /// </summary>
     public partial class MainWindow : Window
     {
-        MNISTImage[] trainData;
-        MNISTImage[] testData;
+        //MNIST[] trainData;
+        //MNIST[] testData;
         Random random = new Random();
 
         public MainWindow()
@@ -34,25 +34,29 @@ namespace FNN_MNIST_20160704
             runButton.IsEnabled = false;
             Task.Run(() =>
             {
-                if (trainData == null)
-                {
-                    trainData = MNISTImage.LoadData(@"D:\train-labels.idx1-ubyte", @"D:\train-images.idx3-ubyte");
-                }
+                //if (trainData == null)
+                //{
+                //    trainData = MNIST.LoadData(@"D:\train-labels.idx1-ubyte", @"D:\train-images.idx3-ubyte");
+                //}
 
-                if (testData == null)
-                {
-                    testData = MNISTImage.LoadData(@"D:\t10k-labels.idx1-ubyte", @"D:\t10k-images.idx3-ubyte");
-                }
+                //if (testData == null)
+                //{
+                //    testData = MNIST.LoadData(@"D:\t10k-labels.idx1-ubyte", @"D:\t10k-images.idx3-ubyte");
+                //}
 
-                //var feedforwardNeuralNetwork = new FeedforwardNeuralNetwork();
-                //feedforwardNeuralNetwork.Learn(trainData.ToInput(), trainData.ToOutput());
+                var fnn = FeedforwardNeuralNetwork.Initialize();
+                fnn.Learn(@"D:\train-labels.idx1-ubyte", @"D:\train-images.idx3-ubyte");
+                ParameterArrays.FromMatrices(fnn.Weight2, fnn.Bias2, fnn.Weight3, fnn.Bias3).Serialize();
+
+                var parameterArrays = ParameterArrays.Deserialize("parameter_arrays_20160706022111.xml");
+                var fnn2 = FeedforwardNeuralNetwork.FromParameterArrays(parameterArrays);
 
                 Application.Current.Dispatcher.Invoke(() =>
                 {
-                    var index = random.Next(0, trainData.Length);
-                    var mnistImage = trainData[index];
-                    mnistLabelTextBlock.Text = $"Label: {mnistImage.Label} (Index: {index})";
-                    mnistPixelsImage.Source = mnistImage.ToBitmapSource();
+                    //var index = random.Next(0, trainData.Length);
+                    //var mnistImage = trainData[index];
+                    //mnistLabelTextBlock.Text = $"Label: {mnistImage.Label} (Index: {index})";
+                    //mnistPixelsImage.Source = mnistImage.ToBitmapSource();
                     runButton.IsEnabled = true;
                 });
             });

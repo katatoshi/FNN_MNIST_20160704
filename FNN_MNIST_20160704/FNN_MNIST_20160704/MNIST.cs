@@ -97,6 +97,20 @@ namespace FNN_MNIST_20160704
             return Enumerable.Range(0, 10).Select(n => n == label ? 1.0 : 0.0).ToArray();
         }
 
+        public static List<byte>[] ToMostLikelyLabelsArray(this Matrix<double> outputMatrix)
+        {
+            if (outputMatrix.RowCount != 10)
+            {
+                throw new ArgumentException();
+            }
+
+            return outputMatrix.ToColumnArrays().Select(column =>
+            {
+                var max = column.Max();
+                return Enumerable.Range(0, 10).Where(n => column[n] == max).Select(e => (byte)e).ToList();
+            }).ToArray();
+        }
+
         public static int ReverseBytes(this int x) => BitConverter.ToInt32(BitConverter.GetBytes(x).Reverse().ToArray(), 0);
 
         public static double[,] ToDouble2DArray(this byte[,] byte2DArray)

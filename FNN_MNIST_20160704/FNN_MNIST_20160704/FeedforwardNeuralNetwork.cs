@@ -39,10 +39,10 @@ namespace FNN_MNIST_20160704
         public readonly static double InitializeStdDev = 0.01;
         public readonly static double InitialBias = 0.01;
 
-        public readonly static int MaxIteration = 10;
-        public readonly static double EpsilonGradient = 0.01;
+        public readonly static int MaxIteration = 1200;
+        public readonly static double EpsilonGradient = 0.001;
 
-        public Vector<double> MeanVector { get; private set; }
+        public double[] MeanArray { get; private set; }
 
         public Matrix<double> Weight2 { get; private set; }
         public Matrix<double> Bias2 { get; private set; }
@@ -103,17 +103,16 @@ namespace FNN_MNIST_20160704
                 Console.WriteLine("警告：ミニバッチのサイズが学習サンプルの数の約数になっていないため，配列の末尾の一部のサンプルが学習に利用されません．");
             }
 
-            var meanArray = trainData.ToInputMatrix().ToRowArrays().Select(row => row.Average()).ToArray();
+            MeanArray = trainData.ToInputMatrix().ToRowArrays().Select(row => row.Average()).ToArray();
 
             var lastError = double.PositiveInfinity;
             for (var k = 1; k <= MaxIteration; k++)
             {
-                var xMinibatch = trainData.Skip((k * SizeOfMinibatch) % trainData.Length).Take(SizeOfMinibatch).ToArray().ToInputMatrix() - meanArray.ToVector().ToColumnMatrix() * MatrixWrappers.Ones(SizeOfMinibatch).Transpose();
+                var xMinibatch = trainData.Skip((k * SizeOfMinibatch) % trainData.Length).Take(SizeOfMinibatch).ToArray().ToInputMatrix() - MeanArray.ToVector().ToColumnMatrix() * MatrixWrappers.Ones(SizeOfMinibatch).Transpose();
                 var dMinibatch = trainData.Skip((k * SizeOfMinibatch) % trainData.Length).Take(SizeOfMinibatch).ToArray().ToOutputMatrix();
                 lastError = LearnMinibatch(xMinibatch, dMinibatch);
                 var norm = Gradient.Norm(2);
-                Console.WriteLine($"iteration {k}: error = {lastError}");
-                Console.WriteLine($"iteration {k}: norm of gradient = {norm}");
+                Console.WriteLine($"Learning (iteration {k}): error = {lastError}, norm of gradient = {norm}");
                 if (norm < EpsilonGradient)
                 {
                     return lastError;
@@ -159,6 +158,45 @@ namespace FNN_MNIST_20160704
             });
 
             return crossEntropy(d, z3);
+        }
+
+
+        public double TestWithLog(string testLabelsPath, string testImagesPath)
+        {
+            var testData = MNIST.LoadData(testLabelsPath, testImagesPath);
+            return TestWithLog(testData);
+        }
+
+        public double TestWithLog(MNIST[] testData)
+        {
+            var expected = testData.Select(e => e.Label).ToArray();
+            var result = Run(testData);
+            var error = 0;
+            for (var i = 0; i < expected.Length; i++)
+            {
+                var success = result[i].Contains(expected[i]);
+                if (!success)
+                {
+                    error++;
+                }
+                Console.WriteLine($"Testing (sample {i}): success = {success}, expected = {expected[i]}, most likely labels = [{result[i].Select(e => e.ToString()).Aggregate((acc, x) => acc + ", " + x)}], error rate = {error} / {expected.Length}");
+            }
+            return error / (double)expected.Length;
+        }
+
+        public List<byte>[] Run(MNIST[] mnists)
+        {
+            var n = mnists.Length;
+
+            var z1 = mnists.ToInputMatrix() - MeanArray.ToVector().ToColumnMatrix() * MatrixWrappers.Ones(n).Transpose();
+
+            var u2 = Weight2 * z1 + Bias2 * MatrixWrappers.Ones(n).Transpose();
+            var z2 = u2.MapElements(rectifiedLinear);
+
+            var u3 = Weight3 * z2 + Bias3 * MatrixWrappers.Ones(n).Transpose();
+            var z3 = u3.MapColumnVectors(softmax);
+
+            return z3.ToMostLikelyLabelsArray();
         }
     }
 

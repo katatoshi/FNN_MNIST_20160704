@@ -47,9 +47,11 @@ namespace FNN_MNIST_20160704
                 var fnn = FeedforwardNeuralNetwork.Initialize();
                 fnn.Learn(@"D:\train-labels.idx1-ubyte", @"D:\train-images.idx3-ubyte");
                 ParameterArrays.FromMatrices(fnn.Weight2, fnn.Bias2, fnn.Weight3, fnn.Bias3).Serialize();
+                var errorRate = fnn.TestWithLog(@"D:\t10k-labels.idx1-ubyte", @"D:\t10k-images.idx3-ubyte");
+                Console.WriteLine($"errorRate = {errorRate}");
 
-                var parameterArrays = ParameterArrays.Deserialize("parameter_arrays_20160706022111.xml");
-                var fnn2 = FeedforwardNeuralNetwork.FromParameterArrays(parameterArrays);
+                //var parameterArrays = ParameterArrays.Deserialize("parameter_arrays_20160706022111.xml");
+                //var fnn2 = FeedforwardNeuralNetwork.FromParameterArrays(parameterArrays);
 
                 Application.Current.Dispatcher.Invoke(() =>
                 {

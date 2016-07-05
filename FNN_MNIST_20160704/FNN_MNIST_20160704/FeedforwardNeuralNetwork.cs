@@ -39,7 +39,7 @@ namespace FNN_MNIST_20160704
         public readonly static double InitializeStdDev = 0.01;
         public readonly static double InitialBias = 0.01;
 
-        public readonly static int MaxIteration = 1200;
+        public readonly static int MaxIteration = 600;
         public readonly static double EpsilonGradient = 0.001;
 
         public double[] MeanArray { get; private set; }
@@ -75,7 +75,7 @@ namespace FNN_MNIST_20160704
             return new FeedforwardNeuralNetwork(weight2, bias2, weight3, bias3);
         }
 
-        public static FeedforwardNeuralNetwork FromParameterArrays(ParameterArrays parameterArrays)
+        public static FeedforwardNeuralNetwork FromParameterArrays(ParameterArrays parameterArrays, double[] meanArray)
         {
             var weight2 = parameterArrays.Weight2;
             var bias2 = parameterArrays.Bias2;
@@ -83,7 +83,10 @@ namespace FNN_MNIST_20160704
             var weight3 = parameterArrays.Weight3;
             var bias3 = parameterArrays.Bias3;
 
-            return new FeedforwardNeuralNetwork(weight2, bias2, weight3, bias3);
+            var fnn = new FeedforwardNeuralNetwork(weight2, bias2, weight3, bias3);
+            fnn.MeanArray = meanArray;
+
+            return fnn;
         }
 
         FeedforwardNeuralNetwork(Matrix<double> weight2, Matrix<double> bias2, Matrix<double> weight3, Matrix<double> bias3)

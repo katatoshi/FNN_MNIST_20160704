@@ -77,13 +77,13 @@ public class FooActivity extends Activity {
 
 	public void onEvent(FooViewModel.TransitToHogeScreenEvent event) {
 		Intent intent = new Intent(this, event.getActivityClass());
-		intent.putExtras(event.getViewModel().toBundle());
+		intent.putExtra("viewModel", event.getViewModel());
 		startActivity(intent);
 		event.callCallback(null); // コールバック先のオブジェクトが死んでるかもしれない（？）から、画面遷移ではコールバックを用意しないほうがいいかもしれない
 	}
 }
 
-public class HogeViewModel {
+public class HogeViewModel implements Parcelable {
 	public ObservableInt intField;
 
 	public ObservableField<String> stringField;
@@ -93,21 +93,28 @@ public class HogeViewModel {
 		this.stringField.set(stringField);
 	}
 
-	private static final String bundleKeyIntField = "intField";
-
-	private static final String bundleKeyStringField = "stringField";
-
-	public Bundle toBundle() {
-		Bundle bundle = new Bundle();
-		bundle.putInt(bundleKeyIntField, intField.get());
-		bundle.putString(bundleKeyStringField, stringField.get());
-		return bundle;
+	public HogeViewModel(Parcel in) {
+		intField.set(in.readInt());
+		stringField.set(in.readString());
 	}
 
-	public static HogeViewModel create(Bundle bundle) {
-		int intField = bundle.getInt(bundleKeyIntField);
-		String stringField = bundle.getString(bundleKeyStringField);
-		return new HogeViewModel(intField, stringField);
+	public int describeContents() {
+		return 0;
+	}
+
+	public void writeToParcel(Parcel out, int flags) {
+		out.writeInt(intField.get());
+		out.writeString(stringField.get());
+	}
+
+	public static final Parcelable.Creator<HogeViewModel> CREATOR = new Parcelable.Creator<HogeViewModel>() {
+		public HogeViewModel createFromParcel(Parcel in) {
+			return new HogeViewModel(in);
+		}
+
+		public ContactParcelable[] newArray(int size) {
+			return new HogeViewModel[size];
+		}
 	}
 
 	// ...
